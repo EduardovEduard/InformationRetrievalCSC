@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="dataSourceStorage">
+  <data-source source="LOCAL" name="PostgreSQL - CSCDB@localhost" uuid="fedfdeab-d26b-4147-b215-1c2f58a714d1">
+    <database-info product="PostgreSQL" version="9.3.5" jdbc-version="4.0" driver-name="PostgreSQL Native Driver" driver-version="PostgreSQL 9.3 JDBC4 (build 1100)">
+      <identifier-quote-string>&quot;</identifier-quote-string>
+    </database-info>
+    <case-sensitivity plain-identifiers="lower" quoted-identifiers="exact"/>
+    <schema name="csc02" catalog="CSCDB"/>
+    <table name="bug" schema="csc02" catalog="CSCDB" type="TABLE">
+      <column name="num" sqlType="int4" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="title" sqlType="varchar" precision="256" scale="0" nullable="true" jdbcType="12"/>
+      <column name="owner_id" sqlType="int4" precision="10" scale="0" nullable="true" jdbcType="4"/>
+      <primary-key name="bug_pkey" columns="num"/>
+      <foreign-key name="bug_owner_id_fkey" columns="owner_id" ref-table="qaengineer" ref-schema="csc02" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <exported-key name="bugcomponent_bug_num_fkey" table="bugcomponent" schema="csc02" catalog="CSCDB" columns="bug_num"/>
+    </table>
+    <table name="bugcomponent" schema="csc02" catalog="CSCDB" type="TABLE">
+      <column name="bug_num" sqlType="int4" precision="10" scale="0" nullable="true" jdbcType="4"/>
+      <column name="component_id" sqlType="int4" precision="10" scale="0" nullable="true" jdbcType="4"/>
+      <foreign-key name="bugcomponent_bug_num_fkey" columns="bug_num" ref-table="bug" ref-schema="csc02" ref-catalog="" ref-columns="num" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="bugcomponent_component_id_fkey" columns="component_id" ref-table="component" ref-schema="csc02" ref-catalog="" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+    </table>
+    <table name="component" schema="csc02" catalog="CSCDB" type="TABLE">
+      <column name="id" sqlType="int4" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="title" sqlType="varchar" precision="256" scale="0" nullable="true" jdbcType="12"/>
+      <primary-key name="component_pkey" columns="id"/>
+      <exported-key name="bugcomponent_component_id_fkey" table="bugcomponent" schema="csc02" catalog="CSCDB" columns="component_id"/>
+    </table>
+    <table name="qaengineer" schema="csc02" catalog="CSCDB" type="TABLE">
+      <column name="id" sqlType="int4" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="email" sqlType="varchar" precision="256" scale="0" nullable="true" jdbcType="12"/>
+      <column name="name" sqlType="varchar" precision="256" scale="0" nullable="true" jdbcType="12"/>
+      <primary-key name="qaengineer_pkey" columns="id"/>
+      <exported-key name="bug_owner_id_fkey" table="bug" schema="csc02" catalog="CSCDB" columns="owner_id"/>
+      <index name="qaengineer_email_key" unique="true" columns="email"/>
+    </table>
+  </data-source>
+</component>
