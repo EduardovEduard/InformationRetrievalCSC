@@ -35,4 +35,7 @@
       <index name="qaengineer_email_key" unique="true" columns="email"/>
     </table>
   </data-source>
+  <data-source source="LOCAL" name="SQLite -" uuid="1e82ec87-4fac-4144-9299-b0c7bace2252">
+    <database-info product="" version="" jdbc-version="" driver-name="" driver-version=""/>
+  </data-source>
 </component>

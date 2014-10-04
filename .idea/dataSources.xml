@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DataSourceManagerImpl" format="xml" hash="2991501992">
+  <component name="DataSourceManagerImpl" format="xml" hash="3671881513">
     <data-source source="LOCAL" name="PostgreSQL - CSCDB@localhost" uuid="fedfdeab-d26b-4147-b215-1c2f58a714d1">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
@@ -10,6 +10,13 @@
       <user-password>dfc8dfc5dfdedfc1dfcbdfc6dfcbdfd9dfc2</user-password>
       <schema-pattern>CSCDB.csc02</schema-pattern>
       <default-schemas>CSCDB.pg_catalog CSCDB.public</default-schemas>
+      <libraries />
+    </data-source>
+    <data-source source="LOCAL" name="SQLite -" uuid="1e82ec87-4fac-4144-9299-b0c7bace2252">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$USER_HOME$/index.db</jdbc-url>
       <libraries />
     </data-source>
   </component>
