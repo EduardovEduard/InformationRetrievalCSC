@@ -1,3 +1,5 @@
+package ru.ees.Indexer;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -29,7 +31,7 @@ public class Index {
 
     public void add(String term, String document) {
         if (backend == null)
-            throw new RuntimeException("Need to call Index.start() before actual work!");
+            throw new RuntimeException("Need to call ru.ees.Indexer.Index.start() before actual work!");
 
         if  (!documents.containsKey(document)) {
             long documentId = backend.addDocument(document);

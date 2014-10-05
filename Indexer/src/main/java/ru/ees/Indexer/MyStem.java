@@ -1,12 +1,11 @@
+package ru.ees.Indexer;
+
 import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Scanner;
+
 import org.apache.commons.exec.*;
 
 public class MyStem {

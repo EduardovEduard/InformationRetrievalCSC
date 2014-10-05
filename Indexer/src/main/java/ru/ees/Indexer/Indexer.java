@@ -1,3 +1,5 @@
+package ru.ees.Indexer;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
@@ -60,7 +62,7 @@ public class Indexer {
 
     public static void main(String[] args) {
         if (args.length != 2)
-            System.out.println("Usage: java -jar Indexer.jar <Directory> <ResultFile>");
+            System.out.println("Usage: java -jar ru.ees.Indexer.Indexer.jar <Directory> <ResultFile>");
         String directory = args[0];
         String result = args[1];
         Indexer indexer = new Indexer(directory);

@@ -1,3 +1,5 @@
+package ru.ees.Indexer;
+
 import java.util.List;
 
 public interface IndexBackend {

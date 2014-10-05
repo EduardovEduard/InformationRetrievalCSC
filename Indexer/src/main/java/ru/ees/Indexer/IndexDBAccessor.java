@@ -1,3 +1,5 @@
+package ru.ees.Indexer;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.sql.*;
@@ -43,6 +45,24 @@ public class IndexDBAccessor implements IndexBackend {
     private PreparedStatement precompiledSelectDocument = null;
     private PreparedStatement precompiledGetDocuments = null;
 
+    public static IndexDBAccessor use(Path path) {
+        IndexDBAccessor accessor = new IndexDBAccessor();
+        accessor.setFile(path);
+        accessor.prepareStatements();
+        return accessor;
+    }
+
+    public Path getFile() {
+        return file;
+    }
+
+    public void setFile(Path file) {
+        this.file = file;
+    }
+
+    public IndexDBAccessor() {
+    }
+
     public IndexDBAccessor(Path file) {
         try {
             this.file = file;
@@ -79,6 +99,14 @@ public class IndexDBAccessor implements IndexBackend {
             stmt.executeUpdate(CREATE_TERMS);
             stmt.executeUpdate(CREATE_TERM_DOCUMENT);
 
+            prepareStatements();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void prepareStatements() {
+        try {
             precompiledAddDocument = connection.prepareStatement(ADD_DOCUMENT);
             precompiledAddTerm = connection.prepareStatement(ADD_TERM);
             precompiledAddTermDocument = connection.prepareStatement(ADD_TERM_DOCUMENT);
@@ -87,6 +115,7 @@ public class IndexDBAccessor implements IndexBackend {
             e.printStackTrace();
         }
     }
+
 
     public synchronized long addDocument(String document) {
         try {
