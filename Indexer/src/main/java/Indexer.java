@@ -51,6 +51,7 @@ public class Indexer {
 
         @Override
         public void run() {
+            System.out.println("Processing file: " + file.toString());
             FileProcessor processor = new FileProcessor(file);
             Set<String> terms = processor.getAllTerms();
             index.add(terms, file.toString());

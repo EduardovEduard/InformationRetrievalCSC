@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.nio.file.*;
 import java.sql.*;
+import java.util.*;
 
 public class IndexDBAccessor implements IndexBackend {
     private Path file;
@@ -27,6 +28,11 @@ public class IndexDBAccessor implements IndexBackend {
     private static final String SELECT_TERM = "SELECT id FROM terms WHERE term = ?;";
     private static final String SELECT_DOCUMENT = "SELECT id FROM documents WHERE file = ?;";
 
+    private static final String GET_DOCUMENTS = "select file from " +
+            "documents join (select document_id from term_document where term_id = " +
+            "(select id from terms where term = ?)) t " +
+            "on documents.id = t.document_id;";
+
     private long lastTermId = 0;
     private long lastDocumentId = 0;
 
@@ -35,6 +41,7 @@ public class IndexDBAccessor implements IndexBackend {
     private PreparedStatement precompiledAddTermDocument = null;
     private PreparedStatement precompiledSelectTerm = null;
     private PreparedStatement precompiledSelectDocument = null;
+    private PreparedStatement precompiledGetDocuments = null;
 
     public IndexDBAccessor(Path file) {
         try {
@@ -75,6 +82,7 @@ public class IndexDBAccessor implements IndexBackend {
             precompiledAddDocument = connection.prepareStatement(ADD_DOCUMENT);
             precompiledAddTerm = connection.prepareStatement(ADD_TERM);
             precompiledAddTermDocument = connection.prepareStatement(ADD_TERM_DOCUMENT);
+            precompiledGetDocuments = connection.prepareStatement(GET_DOCUMENTS);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -104,8 +112,8 @@ public class IndexDBAccessor implements IndexBackend {
 
     public synchronized void addTermDocument(long term, long document) throws RuntimeException {
         try {
-            precompiledAddTermDocument.setLong(1, lastTermId);
-            precompiledAddTermDocument.setLong(2, lastDocumentId);
+            precompiledAddTermDocument.setLong(1, term);
+            precompiledAddTermDocument.setLong(2, document);
             precompiledAddTermDocument.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -120,6 +128,24 @@ public class IndexDBAccessor implements IndexBackend {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public List<String> getDocuments(String term) {
+        List<String> documents = new ArrayList<String>();
+
+        try {
+            precompiledGetDocuments.setString(1, term);
+            ResultSet result = precompiledGetDocuments.executeQuery();
+
+            while (result.next()) {
+                documents.add(result.getString(1));
+            }
+        } catch ( SQLException e) {
+            e.printStackTrace();
+        }
+
+        return documents;
+     }
 
     public void finish() {
         try {
