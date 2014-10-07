@@ -1,5 +1,7 @@
 package ru.ees.Indexer;
 
+import ru.ees.Indexer.exceptions.IncorrectQueryException;
+
 import java.util.List;
 
 public interface IndexBackend {
@@ -10,5 +12,5 @@ public interface IndexBackend {
     public long addTerm(String document);
     public void addTermDocument(long term, long document);
 
-    public List<String> getDocuments(String term);
+    public List<String> processQuery(String query) throws IncorrectQueryException;
 }

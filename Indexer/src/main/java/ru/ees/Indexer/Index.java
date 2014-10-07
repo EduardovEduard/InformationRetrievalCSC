@@ -16,7 +16,7 @@ public class Index {
     }
 
     public void start(String path) {
-        backend = new IndexDBAccessor(Paths.get(path));
+        backend = new IndexDBAccessor(Paths.get(path), false);
         backend.start();
     }
 

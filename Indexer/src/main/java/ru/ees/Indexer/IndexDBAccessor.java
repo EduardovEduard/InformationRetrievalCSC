@@ -1,5 +1,7 @@
 package ru.ees.Indexer;
 
+import ru.ees.Indexer.exceptions.IncorrectQueryException;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.sql.*;
@@ -45,25 +47,24 @@ public class IndexDBAccessor implements IndexBackend {
     private PreparedStatement precompiledSelectDocument = null;
     private PreparedStatement precompiledGetDocuments = null;
 
+    @Override
+    public List<String> processQuery(String query) throws IncorrectQueryException {
+        List<String> result = new ArrayList<String>();
+        result.add("qwetryui");
+        result.add("qwetryuiop");
+        result.add("qwetryuisdfzs");
+        return result;
+    }
+
     public static IndexDBAccessor use(Path path) {
-        IndexDBAccessor accessor = new IndexDBAccessor();
-        accessor.setFile(path);
-        accessor.prepareStatements();
+        IndexDBAccessor accessor = new IndexDBAccessor(path, true);
         return accessor;
-    }
-
-    public Path getFile() {
-        return file;
-    }
-
-    public void setFile(Path file) {
-        this.file = file;
     }
 
     public IndexDBAccessor() {
     }
 
-    public IndexDBAccessor(Path file) {
+    public IndexDBAccessor(Path file, boolean use) {
         try {
             this.file = file;
             createFile(file);
@@ -71,7 +72,10 @@ public class IndexDBAccessor implements IndexBackend {
             final String connectionString = "jdbc:sqlite:" + file.toString();
             Class.forName(DRIVER_NAME);
             connection = DriverManager.getConnection(connectionString);
-            prepareDB();
+            if (use)
+                prepareDB();
+            else
+                prepareStatements();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -158,7 +162,6 @@ public class IndexDBAccessor implements IndexBackend {
         }
     }
 
-    @Override
     public List<String> getDocuments(String term) {
         List<String> documents = new ArrayList<String>();
 
@@ -189,6 +192,6 @@ public class IndexDBAccessor implements IndexBackend {
     }
 
     public static void main(String[] args) {
-        IndexDBAccessor dumper = new IndexDBAccessor(Paths.get("/home/ees/index.ind"));
+        IndexDBAccessor dumper = new IndexDBAccessor(Paths.get("/home/ees/index.ind"), false);
     }
 }
