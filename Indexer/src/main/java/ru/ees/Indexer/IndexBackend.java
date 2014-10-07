@@ -10,7 +10,7 @@ public interface IndexBackend {
 
     public long addDocument(String document);
     public long addTerm(String document);
-    public void addTermDocument(long term, long document);
+    public void addTermDocument(String term, String document);
 
     public List<String> processQuery(String query) throws IncorrectQueryException;
 }

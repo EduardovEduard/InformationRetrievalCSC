@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class IndexDBAccessor implements IndexBackend {
     private Path file;
@@ -36,6 +37,9 @@ public class IndexDBAccessor implements IndexBackend {
             "documents join (select document_id from term_document where term_id = " +
             "(select id from terms where term = ?)) t " +
             "on documents.id = t.document_id;";
+
+    private Map<String, Long> terms = new ConcurrentHashMap<>();
+    private Map<String, Long> documents = new ConcurrentHashMap<>();
 
     private long lastTermId = 0;
     private long lastDocumentId = 0;
@@ -120,7 +124,6 @@ public class IndexDBAccessor implements IndexBackend {
         }
     }
 
-
     public synchronized long addDocument(String document) {
         try {
             precompiledAddDocument.setString(1, document);
@@ -143,10 +146,23 @@ public class IndexDBAccessor implements IndexBackend {
         return ++lastTermId;
     }
 
-    public synchronized void addTermDocument(long term, long document) throws RuntimeException {
+    public synchronized void addTermDocument(String term, String document) throws RuntimeException {
+        if  (!documents.containsKey(document)) {
+            long documentId = addDocument(document);
+            documents.put(document, documentId);
+        }
+
+        if (!terms.containsKey(term)) {
+            long termId = addTerm(term);
+            terms.put(term, termId);
+        }
+
+        long termId = terms.get(term);
+        long docId = documents.get(document);
+
         try {
-            precompiledAddTermDocument.setLong(1, term);
-            precompiledAddTermDocument.setLong(2, document);
+            precompiledAddTermDocument.setLong(1, termId);
+            precompiledAddTermDocument.setLong(2, docId);
             precompiledAddTermDocument.execute();
         } catch (SQLException e) {
             e.printStackTrace();

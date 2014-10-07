@@ -6,8 +6,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Index {
-    private Map<String, Long> terms = new ConcurrentHashMap<>();
-    private Map<String, Long> documents = new ConcurrentHashMap<>();
     private Path root;
     private IndexBackend backend;
 
@@ -32,18 +30,7 @@ public class Index {
     public void add(String term, String document) {
         if (backend == null)
             throw new RuntimeException("Need to call ru.ees.Indexer.Index.start() before actual work!");
-
-        if  (!documents.containsKey(document)) {
-            long documentId = backend.addDocument(document);
-            documents.put(document, documentId);
-        }
-
-        if (!terms.containsKey(term)) {
-            long termId = backend.addTerm(term);
-            terms.put(term, termId);
-        }
-
-        backend.addTermDocument(terms.get(term), documents.get(document));
+        backend.addTermDocument(term, document);
     }
 
     @Override

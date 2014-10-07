@@ -24,26 +24,28 @@ public class SearchEngine {
         String line;
         try {
             while ((line = reader.readLine()) != null) {
-                List<String> files = index.processQuery(line);
-                if (files.size() == 0)
-                    writer.print("\tno documents found!");
-                else {
-                    writer.print("\tfound: ");
-                    for (int i = 0; i < files.size(); ++i) {
-                        if (i > 1) {
-                            writer.print("and " + (files.size() - i) + " more...");
-                            break;
+                try {
+                    List<String> files = index.processQuery(line);
+                    if (files.size() == 0) {
+                        writer.print("\tno documents found!");
+                    } else {
+                        writer.print("\tfound: ");
+                        for (int i = 0; i < files.size(); ++i) {
+                            if (i > 1) {
+                                writer.print("and " + (files.size() - i) + " more...");
+                                break;
+                            }
+                            writer.print(files.get(i) + " ");
                         }
-                        writer.print(files.get(i) + " ");
+                        writer.println();
+                        writer.flush();
                     }
-                    writer.println();
-                    writer.flush();
+                } catch (IncorrectQueryException e) {
+                    System.err.println("Incorrect query!");
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (IncorrectQueryException e) {
-            System.err.println("Incorrect query!");
         }
     }
 
