@@ -243,6 +243,10 @@ public class IndexDBAccessor implements IndexBackend {
                 next = nextTerm(reader);
             }
 
+            if (count % 2 == 0) {
+                throw new IncorrectQueryException();
+            }
+
             list = retrieveDocuments(sqlQuery);
             return list;
         }

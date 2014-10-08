@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 public class Indexer {
     private String directory;
     private Index index;
-    ExecutorService service = Executors.newCachedThreadPool();
+    ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     public Indexer(String directory) {
         this.directory = directory;
