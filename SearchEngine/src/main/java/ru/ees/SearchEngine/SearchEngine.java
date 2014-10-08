@@ -27,7 +27,8 @@ public class SearchEngine {
                 try {
                     List<String> files = index.processQuery(line);
                     if (files.size() == 0) {
-                        writer.print("\tno documents found!");
+                        writer.println("\tno documents found!");
+                        writer.flush();
                     } else {
                         writer.print("\tfound: ");
                         for (int i = 0; i < files.size(); ++i) {

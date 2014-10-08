@@ -2,7 +2,7 @@ package ru.ees.Indexer;
 
 import ru.ees.Indexer.exceptions.IncorrectQueryException;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.sql.*;
 import java.util.*;
@@ -33,10 +33,16 @@ public class IndexDBAccessor implements IndexBackend {
     private static final String SELECT_TERM = "SELECT id FROM terms WHERE term = ?;";
     private static final String SELECT_DOCUMENT = "SELECT id FROM documents WHERE file = ?;";
 
-    private static final String GET_DOCUMENTS = "select file from " +
+    private static final String GET_DOCUMENTS = "select documents.id from " +
             "documents join (select document_id from term_document where term_id = " +
             "(select id from terms where term = ?)) t " +
-            "on documents.id = t.document_id;";
+            "on documents.id = t.document_id ";
+
+    static Map<String, String> operators = new HashMap<>();
+    static {
+        operators.put("OR", " UNION ");
+        operators.put("AND", " INTERSECT ");
+    }
 
     private Map<String, Long> terms = new ConcurrentHashMap<>();
     private Map<String, Long> documents = new ConcurrentHashMap<>();
@@ -53,10 +59,8 @@ public class IndexDBAccessor implements IndexBackend {
 
     @Override
     public List<String> processQuery(String query) throws IncorrectQueryException {
-        List<String> result = new ArrayList<String>();
-        result.add("qwetryui");
-        result.add("qwetryuiop");
-        result.add("qwetryuisdfzs");
+        QueryProcessor processor = new QueryProcessor(query);
+        List<String> result = processor.process(query);
         return result;
     }
 
@@ -68,18 +72,22 @@ public class IndexDBAccessor implements IndexBackend {
     public IndexDBAccessor() {
     }
 
+    //TODO Убрать костылища
     public IndexDBAccessor(Path file, boolean use) {
         try {
             this.file = file;
-            createFile(file);
+
+            if (!use)
+                createFile(file);
 
             final String connectionString = "jdbc:sqlite:" + file.toString();
             Class.forName(DRIVER_NAME);
             connection = DriverManager.getConnection(connectionString);
-            if (use)
+
+            if (!use)
                 prepareDB();
-            else
-                prepareStatements();
+
+            prepareStatements();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -106,8 +114,6 @@ public class IndexDBAccessor implements IndexBackend {
             stmt.executeUpdate(CREATE_DOCUMENTS);
             stmt.executeUpdate(CREATE_TERMS);
             stmt.executeUpdate(CREATE_TERM_DOCUMENT);
-
-            prepareStatements();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -204,6 +210,79 @@ public class IndexDBAccessor implements IndexBackend {
             stmt.executeUpdate(CREATE_INDEX_DOCUMENTS);
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private class QueryProcessor {
+        private String query;
+        private StringBuffer buffer = new StringBuffer();
+
+        private QueryProcessor(String query) {
+            this.query = query;
+        }
+
+        public List<String> process(String query) throws IncorrectQueryException {
+            StringReader reader = new StringReader(query);
+            List<String> list = new ArrayList<>();
+            String sqlQuery = new String();
+
+            String next = nextTerm(reader);
+            int count = 0;
+            while (!next.isEmpty()) {
+                ++count;
+                if (count % 2 == 0) {
+                    String operator = next.toUpperCase();
+                    if (!operators.containsKey(operator)) {
+                        throw new IncorrectQueryException();
+                    }
+
+                    sqlQuery += operators.get(operator);
+                } else {
+                    sqlQuery += GET_DOCUMENTS.replace("?", "\"" + next + "\"");
+                }
+                next = nextTerm(reader);
+            }
+
+            list = retrieveDocuments(sqlQuery);
+            return list;
+        }
+
+        //TODO Убрать костылища
+        private List<String> retrieveDocuments(String sql) {
+            List<String> result = new ArrayList<>();
+            String prepend = "SELECT file FROM documents JOIN ( " + sql + " ) as l on l.id = documents.id;";
+            try {
+                Statement stmt = connection.createStatement();
+                ResultSet resultSet = stmt.executeQuery(prepend);
+                while (resultSet.next()) {
+                    String file = resultSet.getString(1);
+                    result.add(Paths.get(file).getFileName().toString());
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return result;
+        }
+
+        public String nextTerm(StringReader reader) throws IncorrectQueryException {
+            String STOP_SYMBOLS = ".,;:()!@#$%^&*[]{}\'\"`~";
+            try {
+                buffer.delete(0, buffer.length());
+                int c = 0;
+
+                while ((c = reader.read()) != -1) {
+                    if (STOP_SYMBOLS.lastIndexOf(c) != -1) {
+                        throw new IncorrectQueryException();
+                    }
+                    if (Character.isWhitespace(c)) {
+                        return buffer.toString();
+                    }
+                    buffer.append((char)c);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return buffer.toString();
         }
     }
 

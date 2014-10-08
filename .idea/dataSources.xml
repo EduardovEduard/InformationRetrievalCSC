@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DataSourceManagerImpl" format="xml" hash="372093558">
+  <component name="DataSourceManagerImpl" format="xml" hash="3053871264">
     <data-source source="LOCAL" name="PostgreSQL - CSCDB@localhost" uuid="fedfdeab-d26b-4147-b215-1c2f58a714d1">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
@@ -17,6 +17,13 @@
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$USER_HOME$/PycharmProjects/CSCDatabases/csc03.db</jdbc-url>
+      <libraries />
+    </data-source>
+    <data-source source="LOCAL" name="SQLite - [2]" uuid="684974f0-b17c-4f83-b359-7df55a9918e0">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/resources/testData/smallIndex.db</jdbc-url>
       <libraries />
     </data-source>
   </component>

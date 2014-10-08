@@ -74,4 +74,7 @@
       <primary-key columns="id"/>
     </table>
   </data-source>
+  <data-source source="LOCAL" name="SQLite - [2]" uuid="684974f0-b17c-4f83-b359-7df55a9918e0">
+    <database-info product="" version="" jdbc-version="" driver-name="" driver-version=""/>
+  </data-source>
 </component>
