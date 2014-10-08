@@ -11,16 +11,22 @@
     <packaging>jar</packaging>
     <artifactId>SearchEngine</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>CSCInformationRetrieval</groupId>
-            <artifactId>Indexer</artifactId>
-            <version>1.0</version>
-        </dependency>
-    </dependencies>
-
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.2</version>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -31,7 +37,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>ru.ees.Indexer.Indexer</mainClass>
+                            <mainClass>ru.ees.SearchEngine.SearchEngine</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -46,4 +52,12 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>CSCInformationRetrieval</groupId>
+            <artifactId>Indexer</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
 </project>

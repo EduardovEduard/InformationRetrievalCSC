@@ -61,8 +61,10 @@ public class Indexer {
     }
 
     public static void main(String[] args) {
-        if (args.length != 2)
+        if (args.length != 2) {
             System.out.println("Usage: java -jar ru.ees.Indexer.Indexer.jar <Directory> <ResultFile>");
+            return;
+        }
         String directory = args[0];
         String result = args[1];
         Indexer indexer = new Indexer(directory);

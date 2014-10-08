@@ -22,8 +22,13 @@ public class SearchEngine {
         BufferedReader reader = new BufferedReader(new InputStreamReader(istream));
         PrintWriter writer = new PrintWriter(ostream);
         String line;
+        System.out.println("Enter \\quit to finish.");
         try {
             while ((line = reader.readLine()) != null) {
+                if (line.equals("\\quit")) {
+                    System.out.println("Thank you for using my search application!");
+                    return;
+                }
                 try {
                     List<String> files = index.processQuery(line);
                     if (files.size() == 0) {
