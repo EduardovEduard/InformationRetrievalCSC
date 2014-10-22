@@ -18,9 +18,22 @@ public class FileProcessor {
         }
     }
 
-    public Set<String> getAllTerms() {
+    public Collection<WordOccurences> getAllTerms() {
         try {
-            return myStem.lemmatize(path);
+            List<String> terms = myStem.lemmatize(path);
+            Map<String, WordOccurences> occurences = new HashMap<>();
+            for (int i = 0; i < terms.size(); ++i) {
+                String term = terms.get(i);
+                System.out.println(term);
+                if (occurences.containsKey(term)) {
+                    occurences.get(term).add(i);
+                } else {
+                    occurences.put(term, new WordOccurences(term, path.toString()));
+                    occurences.get(term).add(i);
+                }
+            }
+
+            return occurences.values();
         } catch (IOException e) {
             e.printStackTrace();
             return null;

@@ -55,18 +55,21 @@ public class Indexer {
         public void run() {
             System.out.println("Processing file: " + file.toString());
             FileProcessor processor = new FileProcessor(file);
-            Set<String> terms = processor.getAllTerms();
-            index.add(terms, file.toString());
+            Collection<WordOccurences> terms = processor.getAllTerms();
+            System.out.println(terms);
+            index.add(terms);
         }
     }
 
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.out.println("Usage: java -jar ru.ees.Indexer.Indexer.jar <Directory> <ResultFile>");
-            return;
-        }
-        String directory = args[0];
-        String result = args[1];
+//        if (args.length != 2) {
+//            System.out.println("Usage: java -jar ru.ees.Indexer.Indexer.jar <Directory> <ResultFile>");
+//            return;
+//        }
+//        String directory = args[0];
+//        String result = args[1];
+        String directory = "/home/ees/IdeaProjects/BooleanModelIndex/resources/testData";
+        String result = "/home/ees/IdeaProjects/BooleanModelIndex/resources/testData/index.db";
         Indexer indexer = new Indexer(directory);
         Index index = indexer.buildIndex(result);
     }

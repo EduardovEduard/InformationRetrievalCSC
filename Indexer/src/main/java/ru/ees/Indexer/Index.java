@@ -27,10 +27,21 @@ public class Index {
             add(term, document);
     }
 
+    public void add(Collection<WordOccurences> occurences) {
+        occurences.forEach(this::add);
+    }
+
     public void add(String term, String document) {
         if (backend == null)
             throw new RuntimeException("Need to call ru.ees.Indexer.Index.start() before actual work!");
         backend.addTermDocument(term, document);
+    }
+
+    public void add(WordOccurences occurences) {
+        if (backend == null)
+            throw new RuntimeException("Need to call ru.ees.Indexer.Index.start() before actual work!");
+        backend.addTermDocument(occurences.getWord(), occurences.getDocument());
+        backend.addTermPositionsInDocument(occurences.getWord(), occurences.getDocument(), occurences.getCoordinates());
     }
 
     @Override

@@ -3,6 +3,8 @@ package ru.ees.Indexer;
 import java.io.*;
 import java.nio.file.Paths;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -12,7 +14,7 @@ public class MyStem {
     public MyStem() throws IOException {
     }
 
-    public Set<String> lemmatize(Path file) throws IOException {
+    public List<String> lemmatize(Path file) throws IOException {
         String command = "mystem -dl " + file.toString();
 
         CommandLine line = CommandLine.parse(command);
@@ -29,8 +31,8 @@ public class MyStem {
         return parseOutput(output);
     }
 
-    private Set<String> parseOutput(String stemOutput) {
-        Set<String> set = new HashSet<>();
+    private List<String> parseOutput(String stemOutput) {
+        List<String> words = new ArrayList<>();
         StringBuffer buffer = new StringBuffer();
 
         for (int i = 0; i < stemOutput.length(); ++i) {
@@ -39,14 +41,14 @@ public class MyStem {
                 buffer.delete(0, buffer.length());
             }
             else if (symbol == '}' && buffer.length() != 0) {
-                set.add(buffer.toString());
+                words.add(buffer.toString());
                 buffer.delete(0, buffer.length());
             }
             else if (symbol != '{' && symbol != '}') {
                 buffer.append(symbol);
             }
         }
-        return set;
+        return words;
     }
 
     public static void main(String[] args) throws IOException {

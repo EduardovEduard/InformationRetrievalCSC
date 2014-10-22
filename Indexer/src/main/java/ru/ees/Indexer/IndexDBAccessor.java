@@ -1,6 +1,7 @@
 package ru.ees.Indexer;
 
 import ru.ees.Indexer.exceptions.IncorrectQueryException;
+import ru.ees.Indexer.utils.SQLiteUtils;
 
 import java.io.*;
 import java.nio.file.*;
@@ -8,8 +9,9 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static ru.ees.Indexer.utils.SQLiteUtils.*;
+
 public class IndexDBAccessor implements IndexBackend {
-    private Path file;
     private Connection connection;
 
     private static final String DRIVER_NAME = "org.sqlite.JDBC";
@@ -19,9 +21,12 @@ public class IndexDBAccessor implements IndexBackend {
     private static final String CREATE_DOCUMENTS = "CREATE TABLE documents(id INTEGER PRIMARY KEY NOT NULL, file TEXT);";
     private static final String CREATE_TERMS = "CREATE TABLE terms(id INTEGER PRIMARY KEY NOT NULL, term TEXT);";
     private static final String CREATE_TERM_DOCUMENT =
-            "CREATE TABLE term_document(id INTEGER PRIMARY KEY, term_id, document_id documents, " +
+            "CREATE TABLE term_document(id INTEGER PRIMARY KEY, term_id INTEGER, document_id INTEGER, " +
                     "FOREIGN KEY (term_id) REFERENCES terms(id)," +
                     "FOREIGN KEY (document_id) REFERENCES documents(id));";
+
+    private static final String CREATE_COORDINATES = "CREATE TABLE coordinates(id INTEGER PRIMARY KEY NOT NULL, " +
+            "term_document_id INTEGER, positions TEXT, FOREIGN KEY (term_document_id) REFERENCES term_document(id));";
 
     private static final String CREATE_INDEX_TERMS = "CREATE INDEX IF NOT EXISTS term_index ON terms(term);";
     private static final String CREATE_INDEX_DOCUMENTS = "CREATE INDEX IF NOT EXISTS documents_index ON documents(file);";
@@ -29,9 +34,18 @@ public class IndexDBAccessor implements IndexBackend {
     private static final String ADD_DOCUMENT = "INSERT INTO documents (file) VALUES (?);";
     private static final String ADD_TERM = "INSERT INTO terms (term) VALUES (?);";
     private static final String ADD_TERM_DOCUMENT = "INSERT INTO term_document (term_id, document_id) VALUES (?, ?);";
+    private static final String ADD_TERM_COORDINATES = "INSERT INTO coordinates (term_document_id, positions) " +
+            "VALUES (?, ?);";
 
     private static final String SELECT_TERM = "SELECT id FROM terms WHERE term = ?;";
     private static final String SELECT_DOCUMENT = "SELECT id FROM documents WHERE file = ?;";
+    private static final String SELECT_TERM_DOCUMENT = "SELECT id from term_document where term_id = ? " +
+            "and document_id = ?";
+
+    private static final String SELECT_COORDINATES = "SELECT term, document_id, positions " +
+            "FROM coordinates JOIN term_document ON coordinates.id = term_document.id " +
+            "JOIN terms ON term_id = terms.id " +
+            "WHERE term = ?;";
 
     private static final String GET_DOCUMENTS = "select documents.id from " +
             "documents join (select document_id from term_document where term_id = " +
@@ -53,9 +67,13 @@ public class IndexDBAccessor implements IndexBackend {
     private PreparedStatement precompiledAddDocument = null;
     private PreparedStatement precompiledAddTerm = null;
     private PreparedStatement precompiledAddTermDocument = null;
+    private PreparedStatement precompiledAddTermCoordinates = null;
+
+    private PreparedStatement precompiledGetDocuments = null;
     private PreparedStatement precompiledSelectTerm = null;
     private PreparedStatement precompiledSelectDocument = null;
-    private PreparedStatement precompiledGetDocuments = null;
+    private PreparedStatement precompiledSelectTermDocument = null;
+    private PreparedStatement getPrecompiledSelectCoordinates = null;
 
     @Override
     public List<String> processQuery(String query) throws IncorrectQueryException {
@@ -75,8 +93,6 @@ public class IndexDBAccessor implements IndexBackend {
     //TODO Убрать костылища
     public IndexDBAccessor(Path file, boolean use) {
         try {
-            this.file = file;
-
             if (!use)
                 createFile(file);
 
@@ -114,6 +130,7 @@ public class IndexDBAccessor implements IndexBackend {
             stmt.executeUpdate(CREATE_DOCUMENTS);
             stmt.executeUpdate(CREATE_TERMS);
             stmt.executeUpdate(CREATE_TERM_DOCUMENT);
+            stmt.executeUpdate(CREATE_COORDINATES);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -124,7 +141,10 @@ public class IndexDBAccessor implements IndexBackend {
             precompiledAddDocument = connection.prepareStatement(ADD_DOCUMENT);
             precompiledAddTerm = connection.prepareStatement(ADD_TERM);
             precompiledAddTermDocument = connection.prepareStatement(ADD_TERM_DOCUMENT);
+            precompiledAddTermCoordinates = connection.prepareStatement(ADD_TERM_COORDINATES);
+
             precompiledGetDocuments = connection.prepareStatement(GET_DOCUMENTS);
+            precompiledSelectTermDocument = connection.prepareStatement(SELECT_TERM_DOCUMENT);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -152,6 +172,7 @@ public class IndexDBAccessor implements IndexBackend {
         return ++lastTermId;
     }
 
+    @Override
     public synchronized void addTermDocument(String term, String document) throws RuntimeException {
         if  (!documents.containsKey(document)) {
             long documentId = addDocument(document);
@@ -175,6 +196,39 @@ public class IndexDBAccessor implements IndexBackend {
         }
     }
 
+    @Override
+    public void addTermPositionsInDocument(String term, String document, List<Integer> positions) {
+        if  (!documents.containsKey(document)) {
+            long documentId = addDocument(document);
+            documents.put(document, documentId);
+        }
+
+        if (!terms.containsKey(term)) {
+            long termId = addTerm(term);
+            terms.put(term, termId);
+        }
+
+        long termId = terms.get(term);
+        long documentId = documents.get(document);
+        try {
+            precompiledSelectTermDocument.setLong(1, termId);
+            precompiledSelectTermDocument.setLong(2, documentId);
+            ResultSet set = precompiledSelectTermDocument.executeQuery();
+
+            if (!set.next()) {
+                throw new RuntimeException("AddTermPosition: No such Term-doc pair!");
+            }
+
+            long id = set.getLong(1);
+            String coordinates = SQLiteUtils.getString(positions);
+            precompiledAddTermCoordinates.setLong(1, id);
+            precompiledAddTermCoordinates.setString(2, coordinates);
+            precompiledAddTermCoordinates.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void start() {
         try {
             Statement stmt = connection.createStatement();
@@ -185,7 +239,7 @@ public class IndexDBAccessor implements IndexBackend {
     }
 
     public List<String> getDocuments(String term) {
-        List<String> documents = new ArrayList<String>();
+        List<String> documents = new ArrayList<>();
 
         try {
             precompiledGetDocuments.setString(1, term);
@@ -223,8 +277,7 @@ public class IndexDBAccessor implements IndexBackend {
 
         public List<String> process(String query) throws IncorrectQueryException {
             StringReader reader = new StringReader(query);
-            List<String> list = new ArrayList<>();
-            String sqlQuery = new String();
+            String sqlQuery = "";
 
             String next = nextTerm(reader);
             int count = 0;
@@ -247,7 +300,7 @@ public class IndexDBAccessor implements IndexBackend {
                 throw new IncorrectQueryException();
             }
 
-            list = retrieveDocuments(sqlQuery);
+            List<String> list = retrieveDocuments(sqlQuery);
             return list;
         }
 
