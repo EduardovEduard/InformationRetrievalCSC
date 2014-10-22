@@ -40,7 +40,6 @@ public class Index {
     public void add(WordOccurences occurences) {
         if (backend == null)
             throw new RuntimeException("Need to call ru.ees.Indexer.Index.start() before actual work!");
-        backend.addTermDocument(occurences.getWord(), occurences.getDocument());
         backend.addTermPositionsInDocument(occurences.getWord(), occurences.getDocument(), occurences.getCoordinates());
     }
 

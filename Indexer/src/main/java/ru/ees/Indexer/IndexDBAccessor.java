@@ -42,9 +42,11 @@ public class IndexDBAccessor implements IndexBackend {
     private static final String SELECT_TERM_DOCUMENT = "SELECT id from term_document where term_id = ? " +
             "and document_id = ?";
 
-    private static final String SELECT_COORDINATES = "SELECT term, document_id, positions " +
-            "FROM coordinates JOIN term_document ON coordinates.id = term_document.id " +
+    private static final String SELECT_COORDINATES = "SELECT documents.id, file, positions " +
+            "FROM coordinates " +
+            "JOIN term_document ON coordinates.id = term_document.id " +
             "JOIN terms ON term_id = terms.id " +
+            "JOIN documents on documents.id = term_document.document_id " +
             "WHERE term = ?;";
 
     private static final String GET_DOCUMENTS = "select documents.id from " +
@@ -70,10 +72,8 @@ public class IndexDBAccessor implements IndexBackend {
     private PreparedStatement precompiledAddTermCoordinates = null;
 
     private PreparedStatement precompiledGetDocuments = null;
-    private PreparedStatement precompiledSelectTerm = null;
-    private PreparedStatement precompiledSelectDocument = null;
     private PreparedStatement precompiledSelectTermDocument = null;
-    private PreparedStatement getPrecompiledSelectCoordinates = null;
+    private PreparedStatement precompiledSelectCoordinates = null;
 
     @Override
     public List<String> processQuery(String query) throws IncorrectQueryException {
@@ -87,10 +87,7 @@ public class IndexDBAccessor implements IndexBackend {
         return accessor;
     }
 
-    public IndexDBAccessor() {
-    }
-
-    //TODO Убрать костылища
+    //TODO Убрать костылища, Вынести логику ReadOnly и WriteOnly Index
     public IndexDBAccessor(Path file, boolean use) {
         try {
             if (!use)
@@ -145,6 +142,7 @@ public class IndexDBAccessor implements IndexBackend {
 
             precompiledGetDocuments = connection.prepareStatement(GET_DOCUMENTS);
             precompiledSelectTermDocument = connection.prepareStatement(SELECT_TERM_DOCUMENT);
+            precompiledSelectCoordinates = connection.prepareStatement(SELECT_COORDINATES);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -197,20 +195,36 @@ public class IndexDBAccessor implements IndexBackend {
     }
 
     @Override
-    public void addTermPositionsInDocument(String term, String document, List<Integer> positions) {
-        if  (!documents.containsKey(document)) {
-            long documentId = addDocument(document);
-            documents.put(document, documentId);
-        }
-
-        if (!terms.containsKey(term)) {
-            long termId = addTerm(term);
-            terms.put(term, termId);
-        }
-
-        long termId = terms.get(term);
-        long documentId = documents.get(document);
+    public synchronized List<WordOccurences> getCoordinates(String term) {
+        List<WordOccurences> result = new ArrayList<>();
         try {
+            precompiledSelectCoordinates.setString(1, term);
+            ResultSet set = precompiledSelectCoordinates.executeQuery();
+
+            while (set.next()) {
+                String filename = set.getString(1);
+                String coords = set.getString(2);
+
+                List<Integer> coordinates = SQLiteUtils.getList(coords);
+                WordOccurences vector = new WordOccurences(term, filename);
+
+                vector.setCoordinates(coordinates);
+                result.add(vector);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
+    public synchronized void addTermPositionsInDocument(String term, String document, List<Integer> positions) {
+        try {
+            addTermDocument(term, document);
+
+            long termId = terms.get(term);
+            long documentId = documents.get(document);
+
             precompiledSelectTermDocument.setLong(1, termId);
             precompiledSelectTermDocument.setLong(2, documentId);
             ResultSet set = precompiledSelectTermDocument.executeQuery();

@@ -13,5 +13,7 @@ public interface IndexBackend {
     public void addTermDocument(String term, String document);
     public void addTermPositionsInDocument(String term, String document, List<Integer> positions);
 
+    public List<WordOccurences> getCoordinates(String term);
+
     public List<String> processQuery(String query) throws IncorrectQueryException;
 }

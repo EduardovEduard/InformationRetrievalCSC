@@ -56,7 +56,6 @@ public class Indexer {
             System.out.println("Processing file: " + file.toString());
             FileProcessor processor = new FileProcessor(file);
             Collection<WordOccurences> terms = processor.getAllTerms();
-            System.out.println(terms);
             index.add(terms);
         }
     }
@@ -68,8 +67,8 @@ public class Indexer {
 //        }
 //        String directory = args[0];
 //        String result = args[1];
-        String directory = "/home/ees/IdeaProjects/BooleanModelIndex/resources/testData";
-        String result = "/home/ees/IdeaProjects/BooleanModelIndex/resources/testData/index.db";
+        String directory = "/home/ees/IdeaProjects/BooleanModelIndex/resources/moreTestData";
+        String result = "/home/ees/IdeaProjects/BooleanModelIndex/resources/coordinate_index.db";
         Indexer indexer = new Indexer(directory);
         Index index = indexer.buildIndex(result);
     }

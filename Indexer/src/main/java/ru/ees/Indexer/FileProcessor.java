@@ -24,7 +24,6 @@ public class FileProcessor {
             Map<String, WordOccurences> occurences = new HashMap<>();
             for (int i = 0; i < terms.size(); ++i) {
                 String term = terms.get(i);
-                System.out.println(term);
                 if (occurences.containsKey(term)) {
                     occurences.get(term).add(i);
                 } else {

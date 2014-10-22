@@ -17,6 +17,10 @@ public class WordOccurences {
         return coordinates;
     }
 
+    public void setCoordinates(List<Integer> coordinates) {
+        this.coordinates = coordinates;
+    }
+
     public String getWord() {
         return word;
     }
